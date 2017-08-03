@@ -1,0 +1,57 @@
+plugins {
+    id 'idea'
+    id 'java-library'
+    id 'maven-publish'
+    id 'com.jfrog.bintray' version '1.7.3'
+}
+
+group 'com.github.slamdev'
+
+repositories {
+    jcenter()
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xlint:unchecked' << '-Xlint:deprecation' << '-Werror'
+}
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok:1.16.18'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+bintray {
+    user = 'slamdev'
+    key = "${-> getBintrayPublishKey()}"
+    override = true
+    publications = ['mavenJava']
+    pkg {
+        repo = 'maven'
+        name = project.name
+        desc = 'Generic migrations framework'
+        licenses = ['MIT']
+        websiteUrl = 'https://github.com/slamdev/migrations4j'
+        issueTrackerUrl = 'https://github.com/slamdev/migrations4j/issues'
+        vcsUrl = 'https://github.com/slamdev/migrations4j.git'
+        labels = ['java', 'migrations']
+    }
+}
+
+def getBintrayPublishKey() {
+    if (project.hasProperty('bintray.publish.key')) {
+        return project.properties['bintray.publish.key']
+    }
+    if (System.getenv().hasProperty('BINTRAY_PUBLISH_KEY')) {
+        return System.getenv('BINTRAY_PUBLISH_KEY')
+    }
+    throw new InvalidUserDataException('Either `bintray.publish.key` project property or ' +
+            '`BINTRAY_PUBLISH_KEY` environment variable should be specified')
+}
